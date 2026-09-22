@@ -1,4 +1,5 @@
 :root {
+  /* Keep in sync with FONT_STACK in app.js. */
   --font: "LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", "Songti SC", "SimSun", serif;
   --ink: #3a1405;          /* riddle text on the moon */
   --glow: #ffe6a0;         /* riddle text that spills onto the night sky */
@@ -15,6 +16,9 @@
 * { box-sizing: border-box; }
 
 html, body { margin: 0; height: 100%; }
+/* Backstop against sideways scrolling on phones; `clip` where supported. */
+html, body { overflow-x: hidden; }
+@supports (overflow-x: clip) { html, body { overflow-x: clip; } }
 
 body {
   font-family: var(--font);
@@ -149,6 +153,7 @@ html[lang="en"] .title { letter-spacing: 0.01em; font-size: clamp(22px, 6.6vw, 3
 /* ---------- controls ---------- */
 .controls {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);  /* never wider than the screen */
   gap: 12px;
   padding: 4px 18px 8px;
   margin-top: -4px;
@@ -185,10 +190,14 @@ html[lang="en"] .btn-random { letter-spacing: 0.02em; }
 
 .answer-form {
   display: flex;
+  justify-content: center;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
 }
 .answer-form input {
-  flex: 1;
+  flex: 0 1 auto;
+  width: 52%;        /* with size="1": drop the input's built-in ~20-char width (WebKit) */
   min-width: 0;
   height: 50px;
   padding: 0 18px;

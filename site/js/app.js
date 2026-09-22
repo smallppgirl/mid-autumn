@@ -10,7 +10,9 @@ const CROP_X = 486;
 const CROP_W = 1000;
 const MOON = { cx: 986, cy: 552, r: 452, clipY: 769 }; // clipY: where the stage hides the moon
 
-const FONT_STACK = getComputedStyle(document.documentElement).getPropertyValue("--font").trim();
+// Keep in sync with --font in style.css. Not read from CSS: if this module runs before the
+// stylesheet applies, the value is empty and canvas silently measures with its 10px default.
+const FONT_STACK = '"LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", "Songti SC", "SimSun", serif';
 
 const I18N = {
   zh: {
