@@ -1,3 +1,13 @@
+/* LXGW WenKai (SIL OFL 1.1), subset by tools/build-font.mjs to the characters this
+   app can show. One file covers every weight, so no synthetic bolding. */
+@font-face {
+  font-family: "LXGW WenKai";
+  src: url("../assets/fonts/lxgw-wenkai-subset.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Keep in sync with FONT_STACK in app.js. */
   --font: "LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", "Songti SC", "SimSun", serif;
@@ -198,7 +208,8 @@ html[lang="en"] .btn-random { letter-spacing: 0.02em; }
   border: 1.5px solid rgba(246, 207, 114, 0.7);
   background: rgba(255, 247, 225, 0.1);
   color: #fff8e6;
-  font: 400 18px var(--font);   /* >= 16px keeps iOS from zooming in */
+  /* System font: what players type may fall outside the subset. */
+  font: 400 18px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   -webkit-appearance: none;
           appearance: none;
 }

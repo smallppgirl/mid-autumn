@@ -29,10 +29,15 @@ Optional extra accepted answers (synonyms such as `fridge`, `电冰箱`) live in
 To update the riddles:
 
 ```sh
-npm install                              # once: installs opencc-js (Traditional Chinese variants)
-node tools/build-riddles.mjs             # reads 中秋灯谜-新-中英对照.md and private/aliases.json
-git add site/data/riddles.json && git commit -m "Update riddles" && git push
+npm install                # once: opencc-js (Traditional Chinese variants) + subset-font
+npm run build              # riddles.json, then the font subset for the new characters
+git add site/data/riddles.json site/assets/fonts && git commit -m "Update riddles" && git push
 ```
+
+`npm run build` reads `中秋灯谜-新-中英对照.md` and `private/aliases.json`. The font step needs
+`private/fonts/LXGWWenKai-Medium.ttf` (~25 MB, git-ignored), downloaded from
+<https://github.com/lxgw/LxgwWenKai/releases>. Skip it with `npm run build:riddles` if the new
+riddles introduce no new characters.
 
 Riddle ids are derived from the Chinese riddle text, so reordering the file keeps players' progress;
 editing a riddle's wording makes it a new riddle.
@@ -52,6 +57,14 @@ A guess and every accepted answer are normalized the same way, then compared by 
 - Not tolerated: wrong characters/homophones in Chinese, or synonyms missing from the aliases file.
 
 `private/test-answers.mjs` checks all of this, including that no riddle accepts another riddle's answer.
+
+## Fonts
+
+The riddle text uses [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (SIL Open Font License 1.1,
+see `site/assets/fonts/LICENSE.txt`), subset by `tools/build-font.mjs` to just the characters this
+app can display: ~140 KB self-hosted instead of ~1.5 MB from a public CDN, and no third-party
+dependency at run time (which also helps on mainland Chinese networks). Anything outside the
+subset — including what players type — falls back to the system font.
 
 ## Limits of a GitHub-only app
 

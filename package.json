@@ -3,9 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:riddles": "node tools/build-riddles.mjs"
+    "build": "node tools/build-riddles.mjs && node tools/build-font.mjs",
+    "build:riddles": "node tools/build-riddles.mjs",
+    "build:font": "node tools/build-font.mjs",
+    "test:answers": "node private/test-answers.mjs"
   },
   "devDependencies": {
-    "opencc-js": "^1.0.5"
+    "opencc-js": "^1.0.5",
+    "subset-font": "^2.9.0"
   }
 }
