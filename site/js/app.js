@@ -126,7 +126,9 @@ function tokenize(text, isZh) {
   }
   const phrases = [];
   let phrase = [];
-  for (const ch of text.replace(/\s+/g, "")) {
+  // The category hint "（打一…）" always starts its own line.
+  for (const ch of text.replace(/\s+/g, "").replace(/[（(](?=打|猜)/g, "\n$&")) {
+    if (ch === "\n") { if (phrase.length) phrases.push(phrase); phrase = []; continue; }
     if (PUNCT.test(ch) && phrase.length) phrase[phrase.length - 1] += ch;
     else phrase.push(ch);
     if (BREAK_AFTER.test(ch)) { phrases.push(phrase); phrase = []; }
@@ -386,9 +388,11 @@ function nextRiddle() {
 async function isCorrect(guess) {
   const riddle = data.riddles[current];
   const answers = new Set(riddle.answers);
-  for (const candidate of guessCandidates(guess)) {
-    if (answers.has(await sha256Hex(hashKey(data.salt, riddle.id, candidate)))) return true;
-  }
+  const near = new Set(riddle.near ?? []);
+  const hash = (c) => sha256Hex(hashKey(data.salt, riddle.id, c));
+  const { exact, typo } = guessCandidates(guess);
+  for (const c of exact) if (answers.has(await hash(c))) return true;
+  for (const c of typo) if (near.has(await hash(c))) return true;
   return false;
 }
 
@@ -396,7 +400,7 @@ async function onSubmit(event) {
   event.preventDefault();
   if (!data || switching || !canGuess(current)) return;
   const guess = els.input.value.trim();
-  if (!guessCandidates(guess).length) {
+  if (!guessCandidates(guess).exact.length) {
     showMessage(["empty"], true);
     shake();
     return;

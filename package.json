@@ -1,0 +1,11 @@
+{
+  "name": "mid-autumn",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:riddles": "node tools/build-riddles.mjs"
+  },
+  "devDependencies": {
+    "opencc-js": "^1.0.5"
+  }
+}

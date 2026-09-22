@@ -14,7 +14,7 @@ A mobile-first, static web app for Mid-Autumn lantern riddles, hosted on GitHub 
 
 ## How answers stay hidden
 
-The riddle source (`中秋灯谜-去重版.md`) contains the answers, so it is **git-ignored** and never published.
+The riddle source (`中秋灯谜-新-中英对照.md`) contains the answers, so it is **git-ignored** and never published.
 `tools/build-riddles.mjs` turns it into `site/data/riddles.json`, which holds the riddle text and only
 **salted SHA-256 hashes** of the accepted answers. The browser hashes each guess and compares hashes.
 
@@ -28,9 +28,29 @@ Optional extra accepted answers (synonyms such as `fridge`, `电冰箱`) live in
 To update the riddles:
 
 ```sh
-node tools/build-riddles.mjs            # reads 中秋灯谜-去重版.md and private/aliases.json
+npm install                              # once: installs opencc-js (Traditional Chinese variants)
+node tools/build-riddles.mjs             # reads 中秋灯谜-新-中英对照.md and private/aliases.json
 git add site/data/riddles.json && git commit -m "Update riddles" && git push
 ```
+
+Riddle ids are derived from the Chinese riddle text, so reordering the file keeps players' progress;
+editing a riddle's wording makes it a new riddle.
+
+## How a guess is judged
+
+A guess and every accepted answer are normalized the same way, then compared by hash:
+
+- Full-width/half-width, upper/lower case, spaces and punctuation are ignored; pinyin tone marks
+  are dropped (`jiě` = `jie`); English articles and simple plurals are ignored (`the Sun`, `fingers`).
+- Accepted answers are the Chinese and English answer cells (alternatives split on `／`, `（）`, `/`, `or`),
+  the extra answers in `private/aliases.json`, and Traditional Chinese spellings of all of them.
+- Chatty guesses work: `我猜是镜子吧`, `是盐`, `I think it's a mirror`.
+- Chinese guesses may carry up to two extra characters (`电冰箱`, `小猴子`), but never match a
+  shorter piece than two characters, so `大小` is not accepted for `小` and `雪人` not for `雪`.
+- English answers of 7+ letters tolerate one missing or one extra letter (`elevatr`, `umbrellla`).
+- Not tolerated: wrong characters/homophones in Chinese, or synonyms missing from the aliases file.
+
+`private/test-answers.mjs` checks all of this, including that no riddle accepts another riddle's answer.
 
 ## Limits of a GitHub-only app
 

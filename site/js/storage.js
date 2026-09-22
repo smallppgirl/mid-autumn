@@ -2,7 +2,7 @@
 // phone itself, mirrored into localStorage, a cookie and IndexedDB. The most
 // "used up" copy wins, so clearing only one of them does not reset the limit.
 
-const KEY = "mid-autumn-riddles-v2";
+const KEY = "mid-autumn-riddles-v3";
 const DB_NAME = "mid-autumn-riddles";
 const STORE = "state";
 
