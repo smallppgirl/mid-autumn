@@ -37,6 +37,12 @@ const I18N = {
     congratsGreet: "祝你中秋快乐！",
     congratsTime: (t) => `猜中时间：${t}`,
     close: "好的",
+    retry: "再试一次",
+    failedTitle: "很遗憾，没猜中～",
+    failedLeft: (n) => `本题还剩 ${n} 次机会`,
+    failedHint: "换个思路再想想，答案也许就在眼前",
+    failedOut: `${GUESSES_PER_TURN} 次机会都用完了`,
+    failedOutHint: "换一题，试试别的灯谜吧 🏮",
     loadError: "灯谜加载失败，请刷新重试",
   },
   en: {
@@ -59,6 +65,12 @@ const I18N = {
     congratsGreet: "Happy Mid-Autumn Festival!",
     congratsTime: (t) => `Solved at ${t}`,
     close: "OK",
+    retry: "Try again",
+    failedTitle: "So close — not quite!",
+    failedLeft: (n) => `${n} ${n === 1 ? "chance" : "chances"} left for this riddle`,
+    failedHint: "Try another angle — the answer may be right in front of you",
+    failedOut: `All ${GUESSES_PER_TURN} chances used`,
+    failedOutHint: "Tap “Another riddle” to try a different one 🏮",
     loadError: "Could not load riddles. Please refresh.",
   },
 };
@@ -83,6 +95,13 @@ const els = {
   congratsCount: $("congratsCount"),
   closeCongrats: $("closeCongrats"),
   petals: $("petals"),
+  failed: $("failed"),
+  failedPetals: $("failedPetals"),
+  failedSub: $("failedSub"),
+  failedHint: $("failedHint"),
+  failedNext: $("failedNext"),
+  failedRetry: $("failedRetry"),
+  failedOk: $("failedOk"),
 };
 
 let data = null;
@@ -311,6 +330,7 @@ function applyLanguage() {
     b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
   });
   showMessage(message.key, message.isError);
+  if (!els.failed.hidden) renderFailed();
   renderRiddle();
   if (state && data) renderStatus();
 }
@@ -440,8 +460,8 @@ async function onSubmit(event) {
     showMessage(left > 0 ? ["wrong", left] : ["turnOver"], true);
     shake();
     renderStatus();
-    if (left > 0) els.input.select();
-    else els.input.value = "";
+    if (left === 0) els.input.value = "";
+    openFailed(left);
   }
 }
 
@@ -461,21 +481,56 @@ function openCongrats() {
   const at = latestSolvedAt();
   els.congratsTime.textContent = at ? t("congratsTime", formatTime(at)) : "";
   els.congratsCount.textContent = t("congratsCount", wins());
+  // Gold osmanthus petals falling, with a few lanterns rising.
+  fillPetals(els.petals, 36, (i) => (i % 6 === 0
+    ? { cls: "petal lantern", text: "🏮", duration: 9 }
+    : { cls: "petal", duration: 5 }));
+  els.congrats.hidden = false;
+  els.closeCongrats.focus();
+}
+
+function fillPetals(container, count, kind) {
   const pieces = [];
-  for (let i = 0; i < 36; i++) {
+  for (let i = 0; i < count; i++) {
+    const { cls, text, duration } = kind(i);
     const p = document.createElement("span");
-    const lantern = i % 6 === 0;
-    p.className = lantern ? "petal lantern" : "petal";
-    if (lantern) p.textContent = "🏮";
+    p.className = cls;
+    if (text) p.textContent = text;
     p.style.left = `${Math.random() * 100}%`;
-    p.style.animationDuration = `${(lantern ? 9 : 5) + Math.random() * 5}s`;
+    p.style.animationDuration = `${duration + Math.random() * 5}s`;
     p.style.animationDelay = `${-Math.random() * 8}s`;
     p.style.setProperty("--drift", `${(Math.random() - 0.5) * 120}px`);
     pieces.push(p);
   }
-  els.petals.replaceChildren(...pieces);
-  els.congrats.hidden = false;
-  els.closeCongrats.focus();
+  container.replaceChildren(...pieces);
+}
+
+// "遗憾" popup after a wrong guess. Never mentions the answer.
+let failedLeft = 0;
+
+function renderFailed() {
+  const out = failedLeft === 0;
+  els.failedSub.textContent = out ? t("failedOut") : t("failedLeft", failedLeft);
+  els.failedHint.textContent = out ? t("failedOutHint") : t("failedHint");
+  els.failedNext.hidden = !out;
+  els.failedOk.hidden = !out;
+  els.failedRetry.hidden = out;
+}
+
+function openFailed(left) {
+  failedLeft = left;
+  renderFailed();
+  // Slow drifting leaves and a light drizzle.
+  fillPetals(els.failedPetals, 22, (i) => (i % 3 === 0
+    ? { cls: "petal leaf", text: "🍂", duration: 8 }
+    : { cls: "petal drop", duration: 3 }));
+  els.failed.hidden = false;
+  (left === 0 ? els.failedNext : els.failedRetry).focus();
+}
+
+function closeFailed() {
+  els.failed.hidden = true;
+  els.failedPetals.replaceChildren();
 }
 
 function closeCongrats() {
@@ -506,8 +561,12 @@ async function init() {
   els.form.addEventListener("submit", onSubmit);
   els.wonBtn.addEventListener("click", openCongrats);
   els.closeCongrats.addEventListener("click", closeCongrats);
+  els.failedRetry.addEventListener("click", () => { closeFailed(); els.input.select(); });
+  els.failedOk.addEventListener("click", closeFailed);
+  els.failedNext.addEventListener("click", () => { closeFailed(); nextRiddle(); });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !els.congrats.hidden) closeCongrats();
+    if (e.key === "Escape" && !els.failed.hidden) closeFailed();
   });
 
   let raf = 0;

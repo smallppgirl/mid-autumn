@@ -318,6 +318,55 @@ html[lang="en"] .footer { letter-spacing: 0.06em; }
 .congrats-greet { margin: 0 0 12px; font-size: 17px; }
 .congrats-time { margin: 0 0 18px; font-size: 13px; color: #7a4b1c; }
 
+/* ---------- "遗憾" popup after a wrong guess: cool, muted twin of the congrats page ---------- */
+.congrats.is-failed {
+  background:
+    radial-gradient(circle at 50% 30%, rgba(170, 188, 228, 0.16) 0, rgba(170, 188, 228, 0) 45%),
+    linear-gradient(180deg, #19213f 0%, #0b1024 70%, #04060e 100%);
+}
+.is-failed .congrats-card {
+  background: linear-gradient(180deg, rgba(234, 238, 247, 0.97), rgba(197, 206, 228, 0.97));
+  color: #2c3552;
+  box-shadow: 0 0 40px rgba(150, 172, 225, 0.25), 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: sink 0.45s ease;
+}
+.is-failed .congrats-moon {
+  background: radial-gradient(circle at 62% 38%, #f3f5fb 0, #cdd5e8 55%, #9aa7c7 100%);
+  box-shadow: 0 0 30px rgba(170, 190, 235, 0.55);
+}
+.is-failed h2 { color: #3a4877; }
+.is-failed .congrats-sub { font-size: 18px; }
+.is-failed .congrats-greet { color: #55607f; font-size: 16px; }
+
+.failed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.failed-actions .btn { height: 46px; padding: 0 22px; }
+.failed-actions [hidden] { display: none; }
+.btn-ghost {
+  color: #3a4877;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgba(58, 72, 119, 0.55);
+}
+
+.petal.leaf {
+  width: auto; height: auto; background: none; box-shadow: none;
+  font-size: 20px; opacity: 0.8;
+}
+.petal.drop {
+  width: 2px; height: 16px; border-radius: 2px;
+  background: linear-gradient(180deg, rgba(190, 206, 242, 0), rgba(190, 206, 242, 0.6));
+  box-shadow: none;
+  animation-name: drizzle;
+}
+@keyframes drizzle { to { transform: translate3d(calc(var(--drift, 0px) / 6), 110vh, 0); } }
+
+@keyframes sink { from { transform: translateY(-18px); opacity: 0; } }
+
 .petals { position: absolute; inset: 0; pointer-events: none; }
 .petal {
   position: absolute;

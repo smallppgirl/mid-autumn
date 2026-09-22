@@ -73,6 +73,21 @@
     </div>
   </div>
 
+  <div class="congrats is-failed" id="failed" hidden role="dialog" aria-modal="true" aria-labelledby="failedTitle">
+    <div class="petals" id="failedPetals" aria-hidden="true"></div>
+    <div class="congrats-card">
+      <div class="congrats-moon" aria-hidden="true">🥺</div>
+      <h2 id="failedTitle" data-i18n="failedTitle">很遗憾，没猜中～</h2>
+      <p class="congrats-sub" id="failedSub"></p>
+      <p class="congrats-greet" id="failedHint"></p>
+      <div class="failed-actions">
+        <button type="button" class="btn btn-random" id="failedNext" data-i18n="random">换一题</button>
+        <button type="button" class="btn btn-submit" id="failedRetry" data-i18n="retry">再试一次</button>
+        <button type="button" class="btn btn-ghost" id="failedOk" data-i18n="close">好的</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
