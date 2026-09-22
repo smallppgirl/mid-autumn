@@ -16,10 +16,7 @@
 <body>
   <main class="app">
     <header class="topbar">
-      <div class="title-wrap">
-        <h1 class="title" data-i18n="title">中秋猜灯谜</h1>
-        <p class="subtitle" id="counter"></p>
-      </div>
+      <h1 class="title" data-i18n="title">中秋猜灯谜</h1>
       <div class="lang-toggle" role="group" aria-label="Language">
         <button type="button" data-lang="zh" aria-pressed="true">中</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
@@ -44,14 +41,20 @@
         <button type="submit" class="btn btn-submit" id="submitBtn" data-i18n="submit">提交</button>
       </form>
 
-      <div class="attempts" id="attempts" aria-live="polite">
-        <span data-i18n="attemptsLabel">剩余机会</span>
-        <span class="attempt-icons" id="attemptIcons" aria-hidden="true"></span>
+      <div class="status">
+        <div class="attempts">
+          <span data-i18n="attemptsLabel">本题机会</span>
+          <span class="attempt-icons" id="attemptIcons" aria-hidden="true"></span>
+        </div>
+        <div class="attempts">
+          <span data-i18n="slotsLabel">剩余灯谜</span>
+          <span class="attempt-icons" id="slotIcons" aria-hidden="true"></span>
+        </div>
       </div>
 
       <p class="message" id="message" role="status"></p>
 
-      <button type="button" class="btn btn-won" id="wonBtn" hidden data-i18n="wonBanner">🏆 你已猜中！查看</button>
+      <button type="button" class="btn btn-won" id="wonBtn" hidden></button>
     </section>
 
     <footer class="footer" data-i18n="footer">花好月圆 · 中秋快乐</footer>
@@ -63,6 +66,7 @@
       <div class="congrats-moon" aria-hidden="true">🎉</div>
       <h2 id="congratsTitle" data-i18n="congratsTitle">恭喜你，猜中啦！</h2>
       <p class="congrats-sub" data-i18n="congratsSub">花好月圆，阖家团圆</p>
+      <p class="congrats-count" id="congratsCount"></p>
       <p class="congrats-greet" data-i18n="congratsGreet">祝你中秋快乐！</p>
       <p class="congrats-time" id="congratsTime"></p>
       <button type="button" class="btn btn-submit" id="closeCongrats" data-i18n="close">好的</button>

@@ -2,7 +2,8 @@ import { guessCandidates, hashKey } from "./normalize.js";
 import { sha256Hex } from "./sha256.js";
 import { loadState, saveState } from "./storage.js";
 
-const MAX_ATTEMPTS = 3;
+const GUESSES_PER_RIDDLE = 3;
+const MAX_RIDDLES = 3; // riddles a device may start (a riddle is started by its first guess)
 
 // Moon geometry in the source artwork (2000x1000). The scene shows a 1000-wide
 // crop starting at x = 486 (see .scene in style.css).
@@ -17,16 +18,20 @@ const FONT_STACK = '"LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif S
 const I18N = {
   zh: {
     title: "中秋猜灯谜",
-    counter: (i, n) => `第 ${i} 题 · 共 ${n} 题`,
     random: "换一题",
     answerLabel: "你的答案",
     placeholder: "输入谜底…",
     submit: "提交",
-    attemptsLabel: "剩余机会",
+    attemptsLabel: "本题机会",
+    slotsLabel: "剩余灯谜",
     empty: "请先输入答案哦",
-    wrong: (n) => `没猜中，再想想～ 还剩 ${n} 次机会`,
-    out: "机会已用完，感谢参与！中秋快乐 🌕",
-    wonBanner: "🏆 你已猜中！点此查看",
+    wrong: (n) => `没猜中，再想想～ 本题还剩 ${n} 次机会`,
+    usedUp: "这题的机会用完了，换一题试试吧",
+    gameOver: (n) => n
+      ? `三个灯谜都完成啦，共猜中${zhNum(n)}个！中秋快乐 🌕`
+      : "三个灯谜都完成啦，感谢参与！中秋快乐 🌕",
+    wonBanner: (n) => `🏆 你已猜中${zhNum(n)}个灯谜`,
+    congratsCount: (n) => `已猜中${zhNum(n)}个灯谜`,
     footer: "花好月圆 · 中秋快乐",
     congratsTitle: "恭喜你，猜中啦！",
     congratsSub: "花好月圆，阖家团圆",
@@ -37,16 +42,18 @@ const I18N = {
   },
   en: {
     title: "Mid-Autumn Riddles",
-    counter: (i, n) => `Riddle ${i} of ${n}`,
     random: "Another riddle",
     answerLabel: "Your answer",
     placeholder: "Type your answer…",
     submit: "Submit",
-    attemptsLabel: "Chances left",
+    attemptsLabel: "Chances for this riddle",
+    slotsLabel: "Riddles left",
     empty: "Please type an answer first",
-    wrong: (n) => `Not quite — ${n} ${n === 1 ? "chance" : "chances"} left`,
-    out: "No chances left. Thanks for playing — Happy Mid-Autumn! 🌕",
-    wonBanner: "🏆 You got it! Tap to view",
+    wrong: (n) => `Not quite — ${n} ${n === 1 ? "chance" : "chances"} left for this riddle`,
+    usedUp: "No chances left for this riddle. Try another one!",
+    gameOver: (n) => `All three riddles done — you solved ${n}. Happy Mid-Autumn! 🌕`,
+    wonBanner: (n) => `🏆 You've solved ${n} ${n === 1 ? "riddle" : "riddles"}`,
+    congratsCount: (n) => `Riddles solved: ${n} of ${MAX_RIDDLES}`,
     footer: "Happy Mid-Autumn Festival",
     congratsTitle: "Congratulations!",
     congratsSub: "You solved the lantern riddle",
@@ -57,21 +64,24 @@ const I18N = {
   },
 };
 
+const zhNum = (n) => "零一两三四五六七八九"[n] ?? String(n);
+
 const $ = (id) => document.getElementById(id);
 const els = {
   scene: $("scene"),
   riddle: $("riddle"),
   riddleText: $("riddleText"),
-  counter: $("counter"),
   randomBtn: $("randomBtn"),
   form: $("answerForm"),
   input: $("answerInput"),
   submitBtn: $("submitBtn"),
   attemptIcons: $("attemptIcons"),
+  slotIcons: $("slotIcons"),
   message: $("message"),
   wonBtn: $("wonBtn"),
   congrats: $("congrats"),
   congratsTime: $("congratsTime"),
+  congratsCount: $("congratsCount"),
   closeCongrats: $("closeCongrats"),
   petals: $("petals"),
 };
@@ -80,7 +90,7 @@ let data = null;
 let current = 0;
 let lang = "zh";
 let state = null;
-let messageKey = null; // [key, ...args] so the message follows language switches
+let message = { key: null, isError: false }; // key = [name, ...args]; re-rendered on language switch
 
 const t = (key, ...args) => {
   const v = I18N[lang][key];
@@ -283,7 +293,6 @@ function renderRiddle() {
   const textBottom = top + lines.length * lh + 8;
   els.scene.style.height = textBottom > g.width * (880 / CROP_W) ? `${textBottom}px` : "";
   els.riddleText.textContent = text;
-  els.counter.textContent = t("counter", current + 1, data.riddles.length);
 }
 
 /* ------------------------------------------------------------------ */
@@ -300,49 +309,75 @@ function applyLanguage() {
   document.querySelectorAll(".lang-toggle button").forEach((b) => {
     b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
   });
-  if (state?.wonAt) els.congratsTime.textContent = t("congratsTime", formatTime(state.wonAt));
-  showMessage(messageKey);
+  showMessage(message.key, message.isError);
   renderRiddle();
+  if (state && data) renderStatus();
 }
 
 function showMessage(key, isError = false) {
-  messageKey = key;
+  message = { key, isError };
   els.message.textContent = key ? t(...key) : "";
-  if (key) els.message.classList.toggle("is-error", isError);
+  els.message.classList.toggle("is-error", isError);
 }
 
-function renderAttempts() {
-  const left = Math.max(0, MAX_ATTEMPTS - state.attempts);
-  els.attemptIcons.replaceChildren(
-    ...Array.from({ length: MAX_ATTEMPTS }, (_, i) => {
+/* ---- game rules: 3 guesses per riddle, 3 riddles per device ---- */
+
+const idOf = (i) => data.riddles[i].id;
+const rec = (i) => state.riddles[idOf(i)] ?? { attempts: 0, solved: false, solvedAt: null };
+const finished = (i) => rec(i).solved || rec(i).attempts >= GUESSES_PER_RIDDLE;
+const startedIdx = () => data.riddles.map((_, i) => i).filter((i) => rec(i).attempts > 0);
+const wins = () => data.riddles.filter((_, i) => rec(i).solved).length;
+const slotsLeft = () => Math.max(0, MAX_RIDDLES - startedIdx().length);
+const canGuess = (i) => !finished(i) && (rec(i).attempts > 0 || slotsLeft() > 0);
+// Riddles 换一题 may show: anything unfinished while slots remain, then only started ones.
+const pool = () => data.riddles.map((_, i) => i).filter((i) =>
+  !finished(i) && (slotsLeft() > 0 || rec(i).attempts > 0));
+const gameOver = () => pool().length === 0;
+const latestSolvedAt = () =>
+  Object.values(state.riddles).map((r) => r.solvedAt).filter(Boolean).sort().at(-1) ?? null;
+
+function icons(el, total, left, glyph) {
+  el.replaceChildren(
+    ...Array.from({ length: total }, (_, i) => {
       const s = document.createElement("span");
-      s.textContent = "🏮";
+      s.textContent = glyph;
       if (i >= left) s.className = "used";
       return s;
     }),
   );
-  const locked = state.won || left === 0;
-  els.input.disabled = locked;
-  els.submitBtn.disabled = locked;
-  els.wonBtn.hidden = !state.won;
-  if (!state.won && left === 0) showMessage(["out"], true);
+}
+
+function renderStatus() {
+  if (!data) return;
+  const r = rec(current);
+  icons(els.attemptIcons, GUESSES_PER_RIDDLE, r.solved ? 0 : GUESSES_PER_RIDDLE - r.attempts, "🏮");
+  icons(els.slotIcons, MAX_RIDDLES, slotsLeft(), "🥮");
+  const guessable = canGuess(current);
+  els.input.disabled = !guessable;
+  els.submitBtn.disabled = !guessable;
+  els.randomBtn.disabled = !pool().some((i) => i !== current);
+  const n = wins();
+  els.wonBtn.hidden = n === 0;
+  els.wonBtn.textContent = t("wonBanner", n);
+  if (gameOver()) showMessage(["gameOver", n], false);
 }
 
 let switching = false;
 
 function nextRiddle() {
   if (!data || switching) return;
-  const n = data.riddles.length;
-  let next = Math.floor(Math.random() * n);
-  if (n > 1 && next === current) next = (next + 1 + Math.floor(Math.random() * (n - 1))) % n;
+  const options = pool().filter((i) => i !== current);
+  if (!options.length) { renderStatus(); return; }
+  const next = options[Math.floor(Math.random() * options.length)];
   els.input.value = "";
-  if (!state.won && state.attempts < MAX_ATTEMPTS) showMessage(null);
+  showMessage(null);
   // Guesses are checked against `current`, so only switch it once the new riddle is shown.
   switching = true;
   els.riddle.classList.add("is-switching");
   setTimeout(() => {
     current = next;
     renderRiddle();
+    renderStatus();
     els.riddle.classList.remove("is-switching");
     switching = false;
   }, 260);
@@ -359,7 +394,7 @@ async function isCorrect(guess) {
 
 async function onSubmit(event) {
   event.preventDefault();
-  if (!data || switching || state.won || state.attempts >= MAX_ATTEMPTS) return;
+  if (!data || switching || !canGuess(current)) return;
   const guess = els.input.value.trim();
   if (!guessCandidates(guess).length) {
     showMessage(["empty"], true);
@@ -367,26 +402,27 @@ async function onSubmit(event) {
     return;
   }
   els.submitBtn.disabled = true;
+  const riddleIdx = current;
   const correct = await isCorrect(guess);
-  state.attempts += 1;
+  const r = (state.riddles[idOf(riddleIdx)] ??= { attempts: 0, solved: false, solvedAt: null });
+  r.attempts += 1;
   if (correct) {
-    state.won = true;
-    state.wonAt = new Date().toISOString();
+    r.solved = true;
+    r.solvedAt = new Date().toISOString();
   }
   await saveState(state);
 
   if (correct) {
     els.input.value = "";
     showMessage(null);
-    renderAttempts();
+    renderStatus();
     openCongrats();
   } else {
-    const left = MAX_ATTEMPTS - state.attempts;
-    showMessage(left > 0 ? ["wrong", left] : ["out"], true);
+    const left = GUESSES_PER_RIDDLE - r.attempts;
+    showMessage(left > 0 ? ["wrong", left] : ["usedUp"], true);
     shake();
-    renderAttempts();
-    if (left > 0) els.submitBtn.disabled = false;
-    els.input.select();
+    renderStatus();
+    if (left > 0) els.input.select();
   }
 }
 
@@ -403,7 +439,9 @@ function formatTime(iso) {
 }
 
 function openCongrats() {
-  els.congratsTime.textContent = t("congratsTime", formatTime(state.wonAt));
+  const at = latestSolvedAt();
+  els.congratsTime.textContent = at ? t("congratsTime", formatTime(at)) : "";
+  els.congratsCount.textContent = t("congratsCount", wins());
   const pieces = [];
   for (let i = 0; i < 36; i++) {
     const p = document.createElement("span");
@@ -424,6 +462,8 @@ function openCongrats() {
 function closeCongrats() {
   els.congrats.hidden = true;
   els.petals.replaceChildren();
+  // Just solved the riddle on screen: move on to the next one.
+  if (data && finished(current) && !gameOver()) nextRiddle();
 }
 
 /* ------------------------------------------------------------------ */
@@ -460,13 +500,14 @@ async function init() {
   try {
     const res = await fetch("data/riddles.json", { cache: "no-cache" });
     data = await res.json();
-    current = Math.floor(Math.random() * data.riddles.length);
+    const open = pool();
+    const choices = open.length ? open : startedIdx();
+    current = choices.length ? choices[Math.floor(Math.random() * choices.length)] : 0;
   } catch {
     showMessage(["loadError"], true);
   }
 
   applyLanguage();
-  renderAttempts();
 
   // Canvas measuring needs the web font; re-layout once the glyphs we need are in.
   if (data && document.fonts?.load) {
@@ -474,7 +515,6 @@ async function init() {
     document.fonts.load(`700 32px "LXGW WenKai"`, all).then(refont, () => {});
   }
 
-  if (state.won) openCongrats();
 }
 
 init();

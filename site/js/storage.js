@@ -2,20 +2,24 @@
 // phone itself, mirrored into localStorage, a cookie and IndexedDB. The most
 // "used up" copy wins, so clearing only one of them does not reset the limit.
 
-const KEY = "mid-autumn-riddles-v1";
+const KEY = "mid-autumn-riddles-v2";
 const DB_NAME = "mid-autumn-riddles";
 const STORE = "state";
 
-const empty = () => ({ attempts: 0, won: false, wonAt: null, deviceId: null });
+// State: { riddles: { [id]: { attempts, solved, solvedAt } }, deviceId }
+const empty = () => ({ riddles: {}, deviceId: null });
 
 function merge(...states) {
   const out = empty();
   for (const s of states) {
     if (!s) continue;
-    out.attempts = Math.max(out.attempts, Number(s.attempts) || 0);
-    if (s.won) {
-      out.won = true;
-      out.wonAt = out.wonAt ?? s.wonAt ?? null;
+    for (const [id, r] of Object.entries(s.riddles ?? {})) {
+      const cur = (out.riddles[id] ??= { attempts: 0, solved: false, solvedAt: null });
+      cur.attempts = Math.max(cur.attempts, Number(r?.attempts) || 0);
+      if (r?.solved) {
+        cur.solved = true;
+        if (r.solvedAt && (!cur.solvedAt || r.solvedAt < cur.solvedAt)) cur.solvedAt = r.solvedAt;
+      }
     }
     out.deviceId = out.deviceId ?? s.deviceId ?? null;
   }

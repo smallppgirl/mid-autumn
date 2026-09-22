@@ -70,13 +70,6 @@ body {
 }
 html[lang="en"] .title { letter-spacing: 0.01em; font-size: clamp(22px, 6.6vw, 30px); }
 
-.subtitle {
-  margin: 2px 0 0;
-  font-size: 14px;
-  color: var(--muted);
-  letter-spacing: 0.05em;
-}
-
 .lang-toggle {
   flex: none;
   display: inline-flex;
@@ -222,6 +215,14 @@ html[lang="en"] .btn-random { letter-spacing: 0.02em; }
   box-shadow: 0 6px 16px rgba(217, 154, 43, 0.35), inset 0 1px 0 #fff6d4;
 }
 
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 22px;
+  row-gap: 6px;
+}
+
 .attempts {
   display: flex;
   justify-content: center;
@@ -305,6 +306,7 @@ html[lang="en"] .footer { letter-spacing: 0.06em; }
   color: #a4250f;
 }
 .congrats-sub { margin: 0 0 4px; font-size: 20px; }
+.congrats-count { margin: 6px 0 6px; font-size: 18px; font-weight: 700; color: #a4250f; }
 .congrats-greet { margin: 0 0 12px; font-size: 17px; }
 .congrats-time { margin: 0 0 18px; font-size: 13px; color: #7a4b1c; }
 

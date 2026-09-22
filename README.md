@@ -5,7 +5,11 @@ A mobile-first, static web app for Mid-Autumn lantern riddles, hosted on GitHub 
 - A random riddle is written on the moon. The text is sized and wrapped to fit inside the moon's circle; any characters that spill off the moon switch to a light color so they stay readable against the night sky.
 - A **中 / EN** toggle (top right) switches the same riddle between Chinese and English.
 - Guesses are accepted in Chinese or English. A correct guess opens a congratulation page.
-- Each device gets **3 guesses** in total.
+- Each device can play **3 riddles with 3 guesses each** (at most 9 guesses and 3 wins).
+  Browsing with 换一题 is free; a riddle counts once you submit a guess on it. Finished riddles
+  (solved, or 3 wrong guesses) don't come back, and once 3 riddles are started, 换一题 only cycles
+  through the unfinished ones. The win button shows the total, e.g. "你已猜中两个灯谜".
+- The riddle number is not shown.
 - Answers are never displayed.
 
 ## How answers stay hidden
@@ -32,7 +36,7 @@ git add site/data/riddles.json && git commit -m "Update riddles" && git push
 
 GitHub Pages only serves static files; there is no server or database. So:
 
-- **The 3-guess limit is per browser, not per person.** The count is stored on the phone in localStorage,
+- **The play limit is per browser, not per person.** The count is stored on the phone in localStorage,
   a cookie and IndexedDB (clearing only one of them does not reset it). A private/incognito window,
   another browser, or clearing all site data starts over. Per-IP limits need a backend
   (for example a Cloudflare Worker or Supabase), which GitHub Pages cannot provide.
