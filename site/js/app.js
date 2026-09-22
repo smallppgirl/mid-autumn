@@ -2,8 +2,9 @@ import { guessCandidates, hashKey } from "./normalize.js";
 import { sha256Hex } from "./sha256.js";
 import { loadState, saveState } from "./storage.js";
 
-const GUESSES_PER_RIDDLE = 3;
-const MAX_RIDDLES = 3; // riddles a device may start (a riddle is started by its first guess)
+const GUESSES_PER_TURN = 5; // per riddle, fresh each time a riddle is shown
+const MAX_WINS = 10;        // the game ends after this many solved riddles
+const RECENT = 10;          // don't repeat the last few riddles shown, when possible
 
 // Moon geometry in the source artwork (2000x1000). The scene shows a 1000-wide
 // crop starting at x = 486 (see .scene in style.css).
@@ -23,13 +24,11 @@ const I18N = {
     placeholder: "输入谜底…",
     submit: "提交",
     attemptsLabel: "本题机会",
-    slotsLabel: "剩余灯谜",
+    winsLabel: "已猜中",
     empty: "请先输入答案哦",
-    wrong: (n) => `没猜中，再想想～ 本题还剩 ${n} 次机会`,
-    usedUp: "这题的机会用完了，换一题试试吧",
-    gameOver: (n) => n
-      ? `三个灯谜都完成啦，共猜中${zhNum(n)}个！中秋快乐 🌕`
-      : "三个灯谜都完成啦，感谢参与！中秋快乐 🌕",
+    wrong: (n) => `没猜中，再想想～ 还剩 ${n} 次机会`,
+    turnOver: `${GUESSES_PER_TURN} 次都没猜中～ 点「换一题」试试别的灯谜吧 🏮`,
+    gameOver: (n) => `太厉害了！你已猜中${zhNum(n)}个灯谜，中秋快乐 🌕`,
     wonBanner: (n) => `🏆 你已猜中${zhNum(n)}个灯谜`,
     congratsCount: (n) => `已猜中${zhNum(n)}个灯谜`,
     footer: "花好月圆 · 中秋快乐",
@@ -47,13 +46,13 @@ const I18N = {
     placeholder: "Type your answer…",
     submit: "Submit",
     attemptsLabel: "Chances for this riddle",
-    slotsLabel: "Riddles left",
+    winsLabel: "Solved",
     empty: "Please type an answer first",
-    wrong: (n) => `Not quite — ${n} ${n === 1 ? "chance" : "chances"} left for this riddle`,
-    usedUp: "No chances left for this riddle. Try another one!",
-    gameOver: (n) => `All three riddles done — you solved ${n}. Happy Mid-Autumn! 🌕`,
+    wrong: (n) => `Not quite — ${n} ${n === 1 ? "chance" : "chances"} left`,
+    turnOver: `${GUESSES_PER_TURN} misses — tap “Another riddle” to try a different one 🏮`,
+    gameOver: (n) => `Amazing — you solved ${n} riddles! Happy Mid-Autumn! 🌕`,
     wonBanner: (n) => `🏆 You've solved ${n} ${n === 1 ? "riddle" : "riddles"}`,
-    congratsCount: (n) => `Riddles solved: ${n} of ${MAX_RIDDLES}`,
+    congratsCount: (n) => `Riddles solved: ${n} of ${MAX_WINS}`,
     footer: "Happy Mid-Autumn Festival",
     congratsTitle: "Congratulations!",
     congratsSub: "You solved the lantern riddle",
@@ -64,7 +63,7 @@ const I18N = {
   },
 };
 
-const zhNum = (n) => "零一两三四五六七八九"[n] ?? String(n);
+const zhNum = (n) => "零一两三四五六七八九十"[n] ?? String(n);
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -76,7 +75,7 @@ const els = {
   input: $("answerInput"),
   submitBtn: $("submitBtn"),
   attemptIcons: $("attemptIcons"),
-  slotIcons: $("slotIcons"),
+  winCount: $("winCount"),
   message: $("message"),
   wonBtn: $("wonBtn"),
   congrats: $("congrats"),
@@ -322,21 +321,37 @@ function showMessage(key, isError = false) {
   els.message.classList.toggle("is-error", isError);
 }
 
-/* ---- game rules: 3 guesses per riddle, 3 riddles per device ---- */
+/* ---- game rules: 5 guesses per turn, play until 10 riddles are solved ---- */
+
+// Guesses on the riddle on screen. Not saved: a new turn (换一题 or reload) starts fresh,
+// and an unsolved riddle may come back later with fresh guesses.
+let turnGuesses = 0;
+const recent = []; // indexes of recently shown riddles
 
 const idOf = (i) => data.riddles[i].id;
-const rec = (i) => state.riddles[idOf(i)] ?? { attempts: 0, solved: false, solvedAt: null };
-const finished = (i) => rec(i).solved || rec(i).attempts >= GUESSES_PER_RIDDLE;
-const startedIdx = () => data.riddles.map((_, i) => i).filter((i) => rec(i).attempts > 0);
-const wins = () => data.riddles.filter((_, i) => rec(i).solved).length;
-const slotsLeft = () => Math.max(0, MAX_RIDDLES - startedIdx().length);
-const canGuess = (i) => !finished(i) && (rec(i).attempts > 0 || slotsLeft() > 0);
-// Riddles 换一题 may show: anything unfinished while slots remain, then only started ones.
-const pool = () => data.riddles.map((_, i) => i).filter((i) =>
-  !finished(i) && (slotsLeft() > 0 || rec(i).attempts > 0));
-const gameOver = () => pool().length === 0;
+const solved = (i) => Boolean(state.riddles[idOf(i)]?.solved);
+const wins = () => data.riddles.filter((_, i) => solved(i)).length;
+const pool = () => data.riddles.map((_, i) => i).filter((i) => !solved(i));
+const gameOver = () => wins() >= MAX_WINS || pool().length === 0;
+const turnOver = () => turnGuesses >= GUESSES_PER_TURN;
+const canGuess = () => !gameOver() && !solved(current) && !turnOver();
 const latestSolvedAt = () =>
   Object.values(state.riddles).map((r) => r.solvedAt).filter(Boolean).sort().at(-1) ?? null;
+
+// A random unsolved riddle other than the current one, avoiding recently shown ones.
+function pickRiddle() {
+  const options = pool().filter((i) => i !== current);
+  const fresh = options.filter((i) => !recent.includes(i));
+  const from = fresh.length ? fresh : options;
+  return from.length ? from[Math.floor(Math.random() * from.length)] : null;
+}
+
+function showRiddle(i) {
+  current = i;
+  turnGuesses = 0;
+  recent.push(i);
+  if (recent.length > RECENT) recent.shift();
+}
 
 function icons(el, total, left, glyph) {
   el.replaceChildren(
@@ -351,14 +366,15 @@ function icons(el, total, left, glyph) {
 
 function renderStatus() {
   if (!data) return;
-  const r = rec(current);
-  icons(els.attemptIcons, GUESSES_PER_RIDDLE, r.solved ? 0 : GUESSES_PER_RIDDLE - r.attempts, "🏮");
-  icons(els.slotIcons, MAX_RIDDLES, slotsLeft(), "🥮");
-  const guessable = canGuess(current);
+  const n = wins();
+  icons(els.attemptIcons, GUESSES_PER_TURN, solved(current) ? 0 : GUESSES_PER_TURN - turnGuesses, "🏮");
+  els.winCount.textContent = `${n} / ${MAX_WINS}`;
+  const guessable = canGuess();
   els.input.disabled = !guessable;
   els.submitBtn.disabled = !guessable;
-  els.randomBtn.disabled = !pool().some((i) => i !== current);
-  const n = wins();
+  els.randomBtn.disabled = gameOver() || pickRiddle() === null;
+  // Draw the eye to 换一题 once this riddle's guesses are used up.
+  els.randomBtn.classList.toggle("nudge", turnOver() && !gameOver());
   els.wonBtn.hidden = n === 0;
   els.wonBtn.textContent = t("wonBanner", n);
   if (gameOver()) showMessage(["gameOver", n], false);
@@ -367,17 +383,17 @@ function renderStatus() {
 let switching = false;
 
 function nextRiddle() {
-  if (!data || switching) return;
-  const options = pool().filter((i) => i !== current);
-  if (!options.length) { renderStatus(); return; }
-  const next = options[Math.floor(Math.random() * options.length)];
+  if (!data || switching || gameOver()) return;
+  const next = pickRiddle();
+  if (next === null) { renderStatus(); return; }
   els.input.value = "";
   showMessage(null);
+  els.randomBtn.classList.remove("nudge");
   // Guesses are checked against `current`, so only switch it once the new riddle is shown.
   switching = true;
   els.riddle.classList.add("is-switching");
   setTimeout(() => {
-    current = next;
+    showRiddle(next);
     renderRiddle();
     renderStatus();
     els.riddle.classList.remove("is-switching");
@@ -398,7 +414,7 @@ async function isCorrect(guess) {
 
 async function onSubmit(event) {
   event.preventDefault();
-  if (!data || switching || !canGuess(current)) return;
+  if (!data || switching || !canGuess()) return;
   const guess = els.input.value.trim();
   if (!guessCandidates(guess).exact.length) {
     showMessage(["empty"], true);
@@ -408,13 +424,11 @@ async function onSubmit(event) {
   els.submitBtn.disabled = true;
   const riddleIdx = current;
   const correct = await isCorrect(guess);
-  const r = (state.riddles[idOf(riddleIdx)] ??= { attempts: 0, solved: false, solvedAt: null });
-  r.attempts += 1;
+  turnGuesses += 1;
   if (correct) {
-    r.solved = true;
-    r.solvedAt = new Date().toISOString();
+    state.riddles[idOf(riddleIdx)] = { solved: true, solvedAt: new Date().toISOString() };
+    await saveState(state);
   }
-  await saveState(state);
 
   if (correct) {
     els.input.value = "";
@@ -422,11 +436,12 @@ async function onSubmit(event) {
     renderStatus();
     openCongrats();
   } else {
-    const left = GUESSES_PER_RIDDLE - r.attempts;
-    showMessage(left > 0 ? ["wrong", left] : ["usedUp"], true);
+    const left = GUESSES_PER_TURN - turnGuesses;
+    showMessage(left > 0 ? ["wrong", left] : ["turnOver"], true);
     shake();
     renderStatus();
     if (left > 0) els.input.select();
+    else els.input.value = "";
   }
 }
 
@@ -467,7 +482,7 @@ function closeCongrats() {
   els.congrats.hidden = true;
   els.petals.replaceChildren();
   // Just solved the riddle on screen: move on to the next one.
-  if (data && finished(current) && !gameOver()) nextRiddle();
+  if (data && solved(current) && !gameOver()) nextRiddle();
 }
 
 /* ------------------------------------------------------------------ */
@@ -505,8 +520,7 @@ async function init() {
     const res = await fetch("data/riddles.json", { cache: "no-cache" });
     data = await res.json();
     const open = pool();
-    const choices = open.length ? open : startedIdx();
-    current = choices.length ? choices[Math.floor(Math.random() * choices.length)] : 0;
+    showRiddle(open.length ? open[Math.floor(Math.random() * open.length)] : 0);
   } catch {
     showMessage(["loadError"], true);
   }

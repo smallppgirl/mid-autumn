@@ -6,7 +6,8 @@ const KEY = "mid-autumn-riddles-v3";
 const DB_NAME = "mid-autumn-riddles";
 const STORE = "state";
 
-// State: { riddles: { [id]: { attempts, solved, solvedAt } }, deviceId }
+// State: { riddles: { [id]: { solved, solvedAt } }, deviceId }. Older entries may also carry
+// `attempts` from earlier rules; it is merged but no longer used.
 const empty = () => ({ riddles: {}, deviceId: null });
 
 function merge(...states) {
