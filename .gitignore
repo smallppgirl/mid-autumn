@@ -1,0 +1,7 @@
+# Riddle sources contain the answers in plain text - never publish them.
+*.md
+!README.md
+private/
+
+.DS_Store
+node_modules/

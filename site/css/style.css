@@ -1,0 +1,343 @@
+:root {
+  --font: "LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --ink: #3a1405;          /* riddle text on the moon */
+  --glow: #ffe6a0;         /* riddle text that spills onto the night sky */
+  --gold: #f6cf72;
+  --gold-deep: #d99a2b;
+  --red: #d8432a;
+  --red-deep: #9e2316;
+  --sky-top: #182552;
+  --sky-bottom: #04060e;
+  --text: #f4ecd8;
+  --muted: #b7bedb;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; height: 100%; }
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background:
+    radial-gradient(1px 1px at 12% 8%, #fff8 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 4%, #fff9 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 90% 14%, #fffa 50%, transparent 51%),
+    radial-gradient(1px 1px at 30% 3%, #fff7 50%, transparent 51%),
+    linear-gradient(180deg, var(--sky-top) 0%, #111a3d 45%, #070b1c 75%, var(--sky-bottom) 100%);
+  background-attachment: fixed;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.app {
+  position: relative;
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 14px) 18px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(26px, 8vw, 34px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(246, 207, 114, 0.45), 0 2px 0 #7a3a0a;
+}
+html[lang="en"] .title { letter-spacing: 0.01em; font-size: clamp(22px, 6.6vw, 30px); }
+
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.lang-toggle {
+  flex: none;
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(8, 12, 32, 0.55);
+  border: 1px solid rgba(246, 207, 114, 0.55);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.lang-toggle button {
+  min-width: 46px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gold);
+  font: 700 15px var(--font);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.lang-toggle button[aria-pressed="true"] {
+  background: linear-gradient(180deg, #ffe39a, var(--gold-deep));
+  color: #3a1405;
+}
+
+/* ---------- moon scene ---------- */
+.scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1000 / 880;      /* a 1000-wide crop of the 2000x1000 artwork, stage trimmed */
+  flex: none;
+  margin-top: auto;              /* on tall phones, share spare height above and below */
+  background: url("../assets/bg.jpg") no-repeat;
+  background-size: 200% auto;
+  background-position: 48.6% 0;  /* centres the moon (image x = 986) */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 11%, #000 100%);
+          mask-image: linear-gradient(180deg, transparent 0, #000 11%, #000 100%);
+}
+@media (min-width: 481px) {
+  .scene {
+    -webkit-mask-image:
+      linear-gradient(180deg, transparent 0, #000 11%, #000 88%, transparent 100%),
+      linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+    -webkit-mask-composite: source-in;
+            mask-image:
+      linear-gradient(180deg, transparent 0, #000 11%, #000 88%, transparent 100%),
+      linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+            mask-composite: intersect;
+  }
+}
+
+.riddle {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.riddle.is-switching { opacity: 0; transform: scale(0.96); }
+
+.riddle .unit {
+  position: absolute;
+  white-space: pre;
+  font-family: var(--font);
+  font-weight: 700;
+}
+.riddle .ink {
+  color: var(--ink);
+  text-shadow: 0 0 3px rgba(255, 250, 225, 0.9);
+}
+.riddle .glow {
+  color: var(--glow);
+  text-shadow: 0 0 2px #000, 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* ---------- controls ---------- */
+.controls {
+  display: grid;
+  gap: 12px;
+  padding: 4px 18px 8px;
+  margin-top: -4px;
+  margin-bottom: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.btn {
+  font: 700 17px var(--font);
+  border: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: transform 0.12s ease, filter 0.2s, opacity 0.2s;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { cursor: not-allowed; opacity: 0.45; filter: grayscale(0.4); }
+.btn:focus-visible, .answer-form input:focus-visible, .lang-toggle button:focus-visible {
+  outline: 2px solid #fff3c4;
+  outline-offset: 2px;
+}
+
+.btn-random {
+  justify-self: center;
+  min-width: 62%;
+  height: 48px;
+  padding: 0 26px;
+  color: #ffe9b0;
+  letter-spacing: 0.1em;
+  background: linear-gradient(180deg, #f06a3b 0%, var(--red) 45%, var(--red-deep) 100%);
+  box-shadow: 0 6px 18px rgba(216, 67, 42, 0.45), inset 0 1px 0 rgba(255, 220, 170, 0.6);
+}
+html[lang="en"] .btn-random { letter-spacing: 0.02em; }
+
+.answer-form {
+  display: flex;
+  gap: 10px;
+}
+.answer-form input {
+  flex: 1;
+  min-width: 0;
+  height: 50px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(246, 207, 114, 0.7);
+  background: rgba(255, 247, 225, 0.1);
+  color: #fff8e6;
+  font: 400 18px var(--font);   /* >= 16px keeps iOS from zooming in */
+  -webkit-appearance: none;
+          appearance: none;
+}
+.answer-form input::placeholder { color: rgba(244, 236, 216, 0.55); }
+.answer-form input:disabled { opacity: 0.5; }
+.answer-form.shake { animation: shake 0.4s; }
+
+.btn-submit {
+  flex: none;
+  height: 50px;
+  padding: 0 24px;
+  color: #3a1405;
+  background: linear-gradient(180deg, #ffe7a3 0%, var(--gold) 45%, var(--gold-deep) 100%);
+  box-shadow: 0 6px 16px rgba(217, 154, 43, 0.35), inset 0 1px 0 #fff6d4;
+}
+
+.attempts {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.attempt-icons { display: inline-flex; gap: 4px; font-size: 18px; }
+.attempt-icons .used { filter: grayscale(1) brightness(0.55); opacity: 0.5; }
+
+.message {
+  min-height: 1.4em;
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #ffd9a0;
+}
+.message.is-error { color: #ffb3a1; }
+
+.btn-won {
+  justify-self: center;
+  height: 46px;
+  padding: 0 24px;
+  color: #3a1405;
+  background: linear-gradient(180deg, #ffe7a3, var(--gold-deep));
+}
+
+.footer {
+  padding: 10px 0 calc(env(safe-area-inset-bottom) + 14px);
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: rgba(246, 207, 114, 0.6);
+}
+html[lang="en"] .footer { letter-spacing: 0.06em; }
+
+/* ---------- congratulation page ---------- */
+.congrats {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 231, 150, 0.35) 0, rgba(255, 231, 150, 0) 45%),
+    linear-gradient(180deg, #1b2a62 0%, #0b1130 70%, #04060e 100%);
+  animation: fade-in 0.35s ease;
+}
+.congrats[hidden] { display: none; }
+
+.congrats-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 380px);
+  padding: 30px 24px 26px;
+  text-align: center;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 244, 205, 0.97), rgba(250, 222, 140, 0.97));
+  color: #3a1405;
+  box-shadow: 0 0 60px rgba(255, 220, 120, 0.45), 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.congrats-moon {
+  width: 96px;
+  height: 96px;
+  margin: -78px auto 10px;
+  display: grid;
+  place-items: center;
+  font-size: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fffbe6, #fbe28c 60%, #f0c24d);
+  box-shadow: 0 0 40px rgba(255, 226, 140, 0.9);
+}
+.congrats h2 {
+  margin: 0 0 8px;
+  font-size: 30px;
+  color: #a4250f;
+}
+.congrats-sub { margin: 0 0 4px; font-size: 20px; }
+.congrats-greet { margin: 0 0 12px; font-size: 17px; }
+.congrats-time { margin: 0 0 18px; font-size: 13px; color: #7a4b1c; }
+
+.petals { position: absolute; inset: 0; pointer-events: none; }
+.petal {
+  position: absolute;
+  top: -20px;
+  width: 10px;
+  height: 7px;
+  border-radius: 60% 40% 60% 40%;
+  background: #f7c948;
+  box-shadow: 0 0 6px rgba(247, 201, 72, 0.8);
+  animation: fall linear infinite;
+}
+.petal.lantern {
+  width: auto; height: auto; background: none; box-shadow: none;
+  top: auto; bottom: -40px; font-size: 26px;
+  animation-name: rise;
+}
+
+@keyframes fall {
+  to { transform: translate3d(var(--drift, 30px), 110vh, 0) rotate(540deg); }
+}
+@keyframes rise {
+  to { transform: translate3d(var(--drift, 20px), -115vh, 0); }
+}
+@keyframes pop { from { transform: scale(0.6); opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes shake {
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .petals { display: none; }
+}
+
+/* Short phones (e.g. iPhone SE): tighten vertical spacing. */
+@media (max-height: 700px) {
+  .topbar { padding-top: calc(env(safe-area-inset-top) + 8px); }
+  .controls { gap: 9px; }
+  .btn-random { height: 44px; }
+  .answer-form input, .btn-submit { height: 46px; }
+}

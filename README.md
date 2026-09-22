@@ -1,0 +1,47 @@
+# 中秋猜灯谜 · Mid-Autumn Lantern Riddles
+
+A mobile-first, static web app for Mid-Autumn lantern riddles, hosted on GitHub Pages.
+
+- A random riddle is written on the moon. The text is sized and wrapped to fit inside the moon's circle; any characters that spill off the moon switch to a light color so they stay readable against the night sky.
+- A **中 / EN** toggle (top right) switches the same riddle between Chinese and English.
+- Guesses are accepted in Chinese or English. A correct guess opens a congratulation page.
+- Each device gets **3 guesses** in total.
+- Answers are never displayed.
+
+## How answers stay hidden
+
+The riddle source (`中秋灯谜-去重版.md`) contains the answers, so it is **git-ignored** and never published.
+`tools/build-riddles.mjs` turns it into `site/data/riddles.json`, which holds the riddle text and only
+**salted SHA-256 hashes** of the accepted answers. The browser hashes each guess and compares hashes.
+
+Optional extra accepted answers (synonyms such as `fridge`, `电冰箱`) live in `private/aliases.json`
+(also git-ignored), keyed by the Chinese answer:
+
+```json
+{ "冰箱": ["电冰箱", "fridge"] }
+```
+
+To update the riddles:
+
+```sh
+node tools/build-riddles.mjs            # reads 中秋灯谜-去重版.md and private/aliases.json
+git add site/data/riddles.json && git commit -m "Update riddles" && git push
+```
+
+## Limits of a GitHub-only app
+
+GitHub Pages only serves static files; there is no server or database. So:
+
+- **The 3-guess limit is per browser, not per person.** The count is stored on the phone in localStorage,
+  a cookie and IndexedDB (clearing only one of them does not reset it). A private/incognito window,
+  another browser, or clearing all site data starts over. Per-IP limits need a backend
+  (for example a Cloudflare Worker or Supabase), which GitHub Pages cannot provide.
+- **Hashing hides the answers from casual viewing**, but anyone determined could still hash likely
+  words to test them offline. That is fine for a festival game but not for a prize with real value.
+
+## Run locally
+
+```sh
+cd site && python3 -m http.server 8000
+# open http://localhost:8000
+```

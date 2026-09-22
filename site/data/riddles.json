@@ -1,0 +1,115 @@
+{
+  "salt": "8969281fedae906006051f95",
+  "riddles": [
+    {
+      "id": 1,
+      "zh": "明明亮亮，又平又光。谁来看它，它都一样。",
+      "en": "Bright and smooth, both flat and shiny. Whoever comes to look, it looks the same to all.",
+      "answers": [
+        "01fda1e9672d7c78232685fec47c192911311f5ffdf2009a941709be1f00909f",
+        "42b56f23d4aa444a6571d0c21ece81fbb87d0199d4d784872f23bd75b485a13b",
+        "c22828ed3b86a6365e9b7ceb6d6f75594120b78f6ca609dee075829eec31dce2",
+        "d9caa98e8ca01ae81fcc26cc0b4fe819b92695671b8aba4cfdaca78a2622a568"
+      ]
+    },
+    {
+      "id": 2,
+      "zh": "名字不同，高矮不同。五个兄弟，住在一起。",
+      "en": "Different names, different heights. Five brothers, all living together.",
+      "answers": [
+        "19fe13140efa4df11d46d8865c718ff1238abe7ead0963c600cc736eac3a9418",
+        "29ce2fc126eb65c24b880222d97f09e750688512465755a95956018cea952ab7",
+        "65d4ff4d4e9e94638ffc9f571f640ea4a3b919147ef3b9ca24fce40000c83f3e",
+        "b8b03dc4a5567b0033152d7a232762fcf722b53503ee5251e7eab60c76e769d6"
+      ]
+    },
+    {
+      "id": 3,
+      "zh": "明又明，亮又亮，一团火球挂天上。冬天呆得时间短，夏天呆得时间长。",
+      "en": "Bright and bright, shining and bright, a ball of fire hangs in the sky. It stays briefly in winter, and stays long in summer.",
+      "answers": [
+        "2a3ec88363c13820855bbe167260cec436f04cacb82fe1752d97e930fb140f20",
+        "5efca3f1f185940de4a7b78bbec9c678b66d5b5fac1414d01d991e4d11507580",
+        "974621d837519cc32cbddb187533fdede34c1450623e74ee4cbe2b830482d710"
+      ]
+    },
+    {
+      "id": 4,
+      "zh": "小娃娃，圆又圆。夏天（热得…）挂在天中间。",
+      "en": "A little doll, round and round. In summer (hot…), it hangs in the middle of the sky.",
+      "answers": [
+        "379c2394f99b07ca521a2a5a02d70beb7a8b8f934487581d6a9c6f7f40401b56",
+        "93e6d8b8596970539c35b6f59227b67d6be39f255b04529da25d21a4557edeb1",
+        "a57001b24a882d817c995b3372c8a9241ac4d5497cd9bbfea2f3239aae4cba8c"
+      ]
+    },
+    {
+      "id": 5,
+      "zh": "一根小木棍，按个弯月亮。秋天收庄稼，请它来帮忙。",
+      "en": "A little wooden stick with a curved moon mounted on it. When the autumn harvest comes, you ask it to help.",
+      "answers": [
+        "4463b0926e330eb35e2b19f53d9c4867f28d07990b101dcaa1f8bf3c7ae2fb37",
+        "5ed836e0d2487fac9ad64a19afcf9a0e8093b125fccd6237039158aaed0562ee",
+        "84a5829724686c450823b4b11107ebdc33749e2996be07c306ac7d64f39879b8",
+        "ee93997c4b312e5b134499e709d4c68fb139f22899199060d3e3c3284b20b6f0"
+      ]
+    },
+    {
+      "id": 6,
+      "zh": "屋子方方，有门没窗。屋外热烘，屋内冰凉。",
+      "en": "A square little house, with a door but no window. Outside it's hot, inside it's icy cold.",
+      "answers": [
+        "33fa1c404e0904efa77b214125a06c26e86e37c0a833348dad1d4408c0304770",
+        "3c30bba42de8a0d75db6200761d827345d1654609a3a1c0df32319ac129c1f80",
+        "93dcd5530599e2802874216d916a0fbe6009157c8ab2fcacd35ce31edc8a158d",
+        "985d936f7ece582592e267ce3d429203a2cd82887ffd8bb1ba99e534f3857fe9",
+        "c239256eab66fab37f0aafa14690a91ea10bd54fb0b7f7c935a064783bd4c902"
+      ]
+    },
+    {
+      "id": 7,
+      "zh": "住在水中央，四面水光。盐到水中，无影无踪。",
+      "en": "Living in the middle of the water, shimmering water-light all around. Once salt drops into the water, it vanishes without a trace.",
+      "answers": [
+        "6e9e92ced97c6a41b191f9a74101027ce3e4f9ca5033f07b1dbdf4803e61cc4a",
+        "a01150e0cef8f21b340a7fbf8c631e22094b070fd0e6ac55e0f3e439d4dcc9d4",
+        "a48b9adaa4b62afcc6a8c7ffbb94dbdcfc3bc9ab3d71ecd1de3a0848bd3345bc"
+      ]
+    },
+    {
+      "id": 8,
+      "zh": "一个娃娃冬天生，全身上下冰冷冷。你叫它也不吭声，太阳一出就化水。",
+      "en": "A doll born in winter, its whole body cold and icy. Call it and it never answers; the moment the sun comes out, it melts into water.",
+      "answers": [
+        "3b87018924c0449dd4b22bb683b0f7977e1450391d7ac90cc0ff0a148320d8e4",
+        "4b6302a8a9f8dc0396eb33d2fbccdecc6357d110fc0e00530668adbb786a17cf"
+      ]
+    },
+    {
+      "id": 9,
+      "zh": "用手拿不起，用刀切不开。煮饭和洗衣，都得请我来。",
+      "en": "You can't pick it up with your hands, you can't cut it with a knife. For cooking and washing, you must ask me for help.",
+      "answers": [
+        "3339c810c4c2e8b4e2de29620c4f31d003bb35d418b6e9131b1953411ffe2182",
+        "b87bd9b3c3d081ec04dd57aa8af581b754d75d5fe3b42737ba3638268b505426"
+      ]
+    },
+    {
+      "id": 10,
+      "zh": "一间屋子四方方，没有门来没有窗。里面暖和又明亮／亮亮又亮光，一天到晚亮光光／变花样。",
+      "en": "A square little house, with no door and no window. Inside it's warm and bright / bright and shiny, glowing or changing patterns all day long.",
+      "answers": [
+        "0d8724ce5f093ba540a1ca3f42425c1a9f94c447bcef9cfe9a51e183c7df99f5",
+        "422b68b21cddbdd53f0dcf12292d1ed31f51b9128b148189cc11d3e568f1136e",
+        "43fb2100af089dd2f4fb5ab117dd365b6674c096b9f3178cf4c0b30db527364d",
+        "72945b8c3c6db1c922a7274e744c89322b9282edd235c24553062e83981f8644",
+        "74a099c047ebbcaf685740045b35daa0fed16e7245cb24b3865814ed978f4594",
+        "7a37b16beced6710b8bd3868a56ef0b81daf94bcb67b3627810c2c7265f17393",
+        "9134d4989bb158f0b38fd4e187740df8b43ded9ea129a5a8e72387f98329ef96",
+        "a2b6188613fbcad37547d1991ed6dd8958e252a5ce9824221145613daf15568a",
+        "bcb4a34d2e915c87f31c564432334d3cbb9bc1f6f5b22bfba0258c5317837d7b",
+        "fb0e22308291f78d16e4db3044b6034a83f436a682925085d37e3883b631b559"
+      ]
+    }
+  ]
+}
