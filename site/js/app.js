@@ -132,6 +132,53 @@ const measure = (text, size) => {
   return w * size;
 };
 
+// Ink bounds of a glyph as fractions of its advance, found by drawing it once and
+// scanning pixels. Chinese punctuation is full-width with ink in one half only
+// ("。" is blank on the right), so centring by advance alone looks shifted.
+const inkCanvas = document.createElement("canvas");
+const inkCtx = inkCanvas.getContext("2d", { willReadFrequently: true });
+let inkCache = new Map();
+
+function inkRatio(ch) {
+  let hit = inkCache.get(ch);
+  if (hit) return hit;
+  const S = 100, pad = 30, w = S * 2 + pad * 2, h = S * 2;
+  inkCanvas.width = w;
+  inkCanvas.height = h;
+  inkCtx.clearRect(0, 0, w, h);
+  inkCtx.font = `700 ${S}px ${FONT_STACK}`;
+  inkCtx.textBaseline = "alphabetic";
+  inkCtx.fillStyle = "#000";
+  inkCtx.fillText(ch, pad, h * 0.75);
+  const { data } = inkCtx.getImageData(0, 0, w, h);
+  let min = w, max = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (data[(y * w + x) * 4 + 3] > 12) {
+        if (x < min) min = x;
+        if (x > max) max = x;
+      }
+    }
+  }
+  const advance = measure(ch, S);
+  hit = max < min || !advance
+    ? { l: 0, r: 1 }
+    : { l: (min - pad) / advance, r: (max + 1 - pad) / advance };
+  inkCache.set(ch, hit);
+  return hit;
+}
+
+// Optical centring offset for a line: half the difference between the blank space
+// before its first glyph and after its last one.
+function opticalShift(units, size) {
+  const first = [...units[0]][0];
+  const lastUnit = units[units.length - 1];
+  const last = [...lastUnit][lastUnit.length - 1] ?? first;
+  const lead = inkRatio(first).l * measure(first, size);
+  const trail = (1 - inkRatio(last).r) * measure(last, size);
+  return Math.max(-size / 2, Math.min(size / 2, (trail - lead) / 2));
+}
+
 const PUNCT = /[／，。！？；：、,.!?;:）)」』”’…～]/;
 const BREAK_AFTER = /[／，。！？；]/;
 
@@ -290,7 +337,7 @@ function renderRiddle() {
   lines.forEach((line, i) => {
     const y = top + i * lh;
     const glyphTop = y + (lh - size) / 2;
-    let x = g.moon.cx - line.width / 2;
+    let x = g.moon.cx - line.width / 2 + opticalShift(line.units, size);
     for (const unit of line.units) {
       const span = document.createElement("span");
       span.className = "unit";
@@ -571,7 +618,7 @@ async function init() {
 
   let raf = 0;
   const relayout = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(renderRiddle); };
-  const refont = () => { measureCache = new Map(); relayout(); };
+  const refont = () => { measureCache = new Map(); inkCache = new Map(); relayout(); };
   new ResizeObserver(relayout).observe(els.scene);
   document.fonts?.addEventListener?.("loadingdone", refont);
 
