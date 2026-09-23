@@ -85,6 +85,7 @@ const els = {
   riddle: $("riddle"),
   riddleText: $("riddleText"),
   riddleCode: $("riddleCode"),
+  langToggle: $("langToggle"),
   randomBtn: $("randomBtn"),
   form: $("answerForm"),
   input: $("answerInput"),
@@ -377,9 +378,7 @@ function applyLanguage() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
   });
-  document.querySelectorAll(".lang-toggle button").forEach((b) => {
-    b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
-  });
+  els.langToggle.setAttribute("aria-checked", String(lang === "en"));
   showMessage(message.key, message.isError);
   if (!els.failed.hidden) renderFailed();
   renderRiddle();
@@ -604,13 +603,11 @@ async function init() {
 
   state = await loadState();
 
-  document.querySelectorAll(".lang-toggle button").forEach((b) =>
-    b.addEventListener("click", () => {
-      if (b.dataset.lang === lang) return;
-      lang = b.dataset.lang;
-      try { localStorage.setItem("mid-autumn-lang", lang); } catch { /* ignore */ }
-      applyLanguage();
-    }));
+  els.langToggle.addEventListener("click", () => {
+    lang = lang === "zh" ? "en" : "zh";
+    try { localStorage.setItem("mid-autumn-lang", lang); } catch { /* ignore */ }
+    applyLanguage();
+  });
   els.randomBtn.addEventListener("click", nextRiddle);
   els.form.addEventListener("submit", onSubmit);
   els.wonBtn.addEventListener("click", openCongrats);

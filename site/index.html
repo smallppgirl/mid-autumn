@@ -16,10 +16,11 @@
   <main class="app">
     <header class="topbar">
       <h1 class="title" data-i18n="title">中秋猜灯谜</h1>
-      <div class="lang-toggle" role="group" aria-label="Language">
-        <button type="button" data-lang="zh" aria-pressed="true">中</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
-      </div>
+      <button type="button" class="lang-toggle" id="langToggle" role="switch" aria-checked="false" aria-label="切换语言 · Switch language">
+        <span class="lang-thumb" aria-hidden="true"></span>
+        <span class="lang-opt" data-lang="zh" aria-hidden="true">中</span>
+        <span class="lang-opt" data-lang="en" aria-hidden="true">EN</span>
+      </button>
     </header>
 
     <section class="scene" id="scene">
