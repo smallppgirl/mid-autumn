@@ -59,6 +59,31 @@ A guess and every accepted answer are normalized the same way, then compared by 
 
 `private/test-answers.mjs` checks all of this, including that no riddle accepts another riddle's answer.
 
+## Answer key for staff
+
+Each riddle shows a two-digit hex code (01..FE, random, not in riddle order) in small dim text at the
+bottom right of the moon. Staff read that code and look the answer up at a separate page:
+
+```
+https://smallppgirl.github.io/mid-autumn/<secret path>/
+```
+
+The path is in `private/admin-path.txt` (git-ignored, but the folder name is still visible in this
+public repo — the folder name is not the protection). The protection is encryption: `answers.json`
+holds the answers encrypted with AES-256-GCM under a key derived from the password with PBKDF2-SHA256
+(600,000 iterations). Without the password the file is random bytes; the page decrypts it in the
+browser and keeps nothing. Anyone with the password and the URL can read the answers, so treat the
+password as the secret and prefer a long one.
+
+Rebuild it after changing riddles or aliases, or to change the password:
+
+```sh
+ADMIN_PASSWORD='...' npm run build:admin
+```
+
+Codes live in `tools/riddle-codes.json` (committed; riddle ids and codes only, no answers) and are
+never reassigned, so a printed answer sheet stays correct when riddles are edited or added.
+
 ## Fonts
 
 The riddle text uses [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (SIL Open Font License 1.1,

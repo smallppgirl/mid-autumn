@@ -11,6 +11,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as OpenCC from "opencc-js";
 import { TYPO_MIN_LENGTH, deletions, hasCJK, hashKey, normalize } from "../site/js/normalize.js";
+import { assignCodes } from "./codes.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const mdPath = resolve(process.argv[2] ?? `${root}/中秋灯谜-新-中英对照.md`);
@@ -44,12 +45,16 @@ if (!rows.length) throw new Error(`No riddle rows found in ${mdPath}`);
 const salt = randomBytes(12).toString("hex");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
+const idOf = (zh) => sha(zh).slice(0, 10);
+const { map: codes, added } = assignCodes(rows.map(([zhRaw]) => idOf(cleanText(zhRaw))));
+
 const seenIds = new Set();
 const riddles = rows.map(([zhRaw, zhAnswer, enRaw, enAnswer]) => {
   const zh = cleanText(zhRaw);
   const en = cleanText(enRaw);
   // Stable id from the riddle text, so editing or reordering the file keeps players' progress.
-  const id = sha(zh).slice(0, 10);
+  const id = idOf(zh);
+  const code = codes[id];
   if (seenIds.has(id)) throw new Error(`Duplicate riddle: ${zh}`);
   seenIds.add(id);
 
@@ -68,6 +73,7 @@ const riddles = rows.map(([zhRaw, zhAnswer, enRaw, enAnswer]) => {
   const hash = (a) => sha(hashKey(salt, id, a));
   return {
     id,
+    code,
     zh,
     en,
     answers: [...accepted].map(hash).sort(),
@@ -77,4 +83,4 @@ const riddles = rows.map(([zhRaw, zhAnswer, enRaw, enAnswer]) => {
 
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, JSON.stringify({ salt, riddles }) + "\n");
-console.log(`Wrote ${riddles.length} riddles to ${outPath}`);
+console.log(`Wrote ${riddles.length} riddles to ${outPath}${added ? ` (${added} new code${added > 1 ? "s" : ""} assigned)` : ""}`);

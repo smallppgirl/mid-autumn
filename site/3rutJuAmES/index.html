@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>灯谜答案 · Answer key</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main class="wrap">
+    <h1>灯谜答案 <span class="sub">Answer key</span></h1>
+
+    <form id="loginForm" class="card">
+      <label for="password">口令 · Password</label>
+      <input id="password" type="password" autocomplete="current-password" enterkeyhint="go" autofocus>
+      <button type="submit" class="btn" id="unlock">解锁 · Unlock</button>
+      <p class="msg" id="loginMsg" role="status"></p>
+    </form>
+
+    <section id="lookup" hidden>
+      <form class="card" id="lookupForm">
+        <label for="code">灯谜编号 · Riddle code <span class="hint">（灯谜右下角的两位编号，如 0A）</span></label>
+        <div class="row">
+          <input id="code" type="text" inputmode="latin" maxlength="2" autocapitalize="characters"
+                 spellcheck="false" placeholder="0A" enterkeyhint="search">
+          <button type="submit" class="btn">查看答案 · Show</button>
+        </div>
+        <p class="msg" id="lookupMsg" role="status"></p>
+      </form>
+
+      <article class="card result" id="result" hidden></article>
+
+      <details class="card all">
+        <summary>全部答案 · All answers</summary>
+        <div id="allList"></div>
+      </details>
+    </section>
+  </main>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

@@ -6,6 +6,7 @@
     "build": "node tools/build-riddles.mjs && node tools/build-font.mjs",
     "build:riddles": "node tools/build-riddles.mjs",
     "build:font": "node tools/build-font.mjs",
+    "build:admin": "node tools/build-admin.mjs",
     "test:answers": "node private/test-answers.mjs"
   },
   "devDependencies": {

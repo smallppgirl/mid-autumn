@@ -84,6 +84,7 @@ const els = {
   scene: $("scene"),
   riddle: $("riddle"),
   riddleText: $("riddleText"),
+  riddleCode: $("riddleCode"),
   randomBtn: $("randomBtn"),
   form: $("answerForm"),
   input: $("answerInput"),
@@ -362,6 +363,7 @@ function renderRiddle() {
   const textBottom = top + lines.length * lh + 8;
   els.scene.style.height = textBottom > g.width * (880 / CROP_W) ? `${textBottom}px` : "";
   els.riddleText.textContent = text;
+  els.riddleCode.textContent = riddle.code ?? "";
 }
 
 /* ------------------------------------------------------------------ */
