@@ -8,8 +8,9 @@ A mobile-first, static web app for Mid-Autumn lantern riddles, hosted on GitHub 
 - **5 guesses per turn**: after 5 misses guessing locks and the 换一题 button pulses; tapping it
   shows another riddle with 5 fresh guesses. Unsolved riddles can come back later (recently shown
   ones are skipped); solved riddles never do.
-- The game ends after **10 solved riddles** per device. "已猜中 N / 10" and the win button
-  ("你已猜中三个灯谜") show progress.
+- The win counter stops at **10** ("已猜中 N / 10", win button "你已猜中三个灯谜"), but play continues:
+  solving more is allowed, the counter just stays at 10 / 10. Everything only locks once every riddle
+  is solved.
 - The riddle number is not shown.
 - Answers are never displayed.
 
@@ -70,7 +71,7 @@ subset — including what players type — falls back to the system font.
 
 GitHub Pages only serves static files; there is no server or database. So:
 
-- **The 10-win limit is per browser, not per person.** Solved riddles are stored on the phone in localStorage,
+- **Progress is per browser, not per person.** Solved riddles are stored on the phone in localStorage,
   a cookie and IndexedDB (clearing only one of them does not reset it). A private/incognito window,
   another browser, or clearing all site data starts over. Per-IP limits need a backend
   (for example a Cloudflare Worker or Supabase), which GitHub Pages cannot provide.

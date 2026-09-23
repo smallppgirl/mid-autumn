@@ -3,7 +3,7 @@ import { sha256Hex } from "./sha256.js";
 import { loadState, saveState } from "./storage.js";
 
 const GUESSES_PER_TURN = 5; // per riddle, fresh each time a riddle is shown
-const MAX_WINS = 10;        // the game ends after this many solved riddles
+const MAX_WINS = 10;        // the counter stops here; playing on is still allowed
 const RECENT = 10;          // don't repeat the last few riddles shown, when possible
 
 // Moon geometry in the source artwork (2000x1000). The scene shows a 1000-wide
@@ -28,7 +28,8 @@ const I18N = {
     empty: "请先输入答案哦",
     wrong: (n) => `没猜中，再想想～ 还剩 ${n} 次机会`,
     turnOver: `${GUESSES_PER_TURN} 次都没猜中～ 点「换一题」试试别的灯谜吧 🏮`,
-    gameOver: (n) => `太厉害了！你已猜中${zhNum(n)}个灯谜，中秋快乐 🌕`,
+    maxed: (n) => `太厉害了！你已猜中${zhNum(n)}个灯谜，还可以继续玩 🌕`,
+    allDone: "所有灯谜都猜完啦！中秋快乐 🌕",
     wonBanner: (n) => `🏆 你已猜中${zhNum(n)}个灯谜`,
     congratsCount: (n) => `已猜中${zhNum(n)}个灯谜`,
     footer: "花好月圆 · 中秋快乐",
@@ -56,7 +57,8 @@ const I18N = {
     empty: "Please type an answer first",
     wrong: (n) => `Not quite — ${n} ${n === 1 ? "chance" : "chances"} left`,
     turnOver: `${GUESSES_PER_TURN} misses — tap “Another riddle” to try a different one 🏮`,
-    gameOver: (n) => `Amazing — you solved ${n} riddles! Happy Mid-Autumn! 🌕`,
+    maxed: (n) => `Amazing — you solved ${n} riddles! Keep playing if you like 🌕`,
+    allDone: "You've solved every riddle! Happy Mid-Autumn 🌕",
     wonBanner: (n) => `🏆 You've solved ${n} ${n === 1 ? "riddle" : "riddles"}`,
     congratsCount: (n) => `Riddles solved: ${n} of ${MAX_WINS}`,
     footer: "Happy Mid-Autumn Festival",
@@ -399,9 +401,10 @@ const idOf = (i) => data.riddles[i].id;
 const solved = (i) => Boolean(state.riddles[idOf(i)]?.solved);
 const wins = () => data.riddles.filter((_, i) => solved(i)).length;
 const pool = () => data.riddles.map((_, i) => i).filter((i) => !solved(i));
-const gameOver = () => wins() >= MAX_WINS || pool().length === 0;
+const allSolved = () => pool().length === 0;
 const turnOver = () => turnGuesses >= GUESSES_PER_TURN;
-const canGuess = () => !gameOver() && !solved(current) && !turnOver();
+const canGuess = () => !allSolved() && !solved(current) && !turnOver();
+const shownWins = () => Math.min(wins(), MAX_WINS);
 const latestSolvedAt = () =>
   Object.values(state.riddles).map((r) => r.solvedAt).filter(Boolean).sort().at(-1) ?? null;
 
@@ -433,24 +436,26 @@ function icons(el, total, left, glyph) {
 
 function renderStatus() {
   if (!data) return;
-  const n = wins();
+  const n = shownWins();
   icons(els.attemptIcons, GUESSES_PER_TURN, solved(current) ? 0 : GUESSES_PER_TURN - turnGuesses, "🏮");
   els.winCount.textContent = `${n} / ${MAX_WINS}`;
   const guessable = canGuess();
   els.input.disabled = !guessable;
   els.submitBtn.disabled = !guessable;
-  els.randomBtn.disabled = gameOver() || pickRiddle() === null;
+  els.randomBtn.disabled = pickRiddle() === null;
   // Draw the eye to 换一题 once this riddle's guesses are used up.
-  els.randomBtn.classList.toggle("nudge", turnOver() && !gameOver());
+  els.randomBtn.classList.toggle("nudge", turnOver() && !allSolved());
   els.wonBtn.hidden = n === 0;
   els.wonBtn.textContent = t("wonBanner", n);
-  if (gameOver()) showMessage(["gameOver", n], false);
+  // Past the cap the game keeps going; the note only fills an empty message line.
+  if (allSolved()) showMessage(["allDone"], false);
+  else if (wins() >= MAX_WINS && !message.key) showMessage(["maxed", n], false);
 }
 
 let switching = false;
 
 function nextRiddle() {
-  if (!data || switching || gameOver()) return;
+  if (!data || switching || allSolved()) return;
   const next = pickRiddle();
   if (next === null) { renderStatus(); return; }
   els.input.value = "";
@@ -527,7 +532,7 @@ function formatTime(iso) {
 function openCongrats() {
   const at = latestSolvedAt();
   els.congratsTime.textContent = at ? t("congratsTime", formatTime(at)) : "";
-  els.congratsCount.textContent = t("congratsCount", wins());
+  els.congratsCount.textContent = t("congratsCount", shownWins());
   // Gold osmanthus petals falling, with a few lanterns rising.
   fillPetals(els.petals, 36, (i) => (i % 6 === 0
     ? { cls: "petal lantern", text: "🏮", duration: 9 }
@@ -584,7 +589,7 @@ function closeCongrats() {
   els.congrats.hidden = true;
   els.petals.replaceChildren();
   // Just solved the riddle on screen: move on to the next one.
-  if (data && solved(current) && !gameOver()) nextRiddle();
+  if (data && solved(current) && !allSolved()) nextRiddle();
 }
 
 /* ------------------------------------------------------------------ */
