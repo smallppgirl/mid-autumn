@@ -52,7 +52,7 @@ const I18N = {
     answerLabel: "Your answer",
     placeholder: "Type your answer…",
     submit: "Submit",
-    attemptsLabel: "Chances for this riddle",
+    attemptsLabel: "Chances",
     winsLabel: "Solved",
     empty: "Please type an answer first",
     wrong: (n) => `Not quite — ${n} ${n === 1 ? "chance" : "chances"} left`,

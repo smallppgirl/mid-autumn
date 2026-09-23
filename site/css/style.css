@@ -242,7 +242,7 @@ html[lang="en"] .btn-random { letter-spacing: 0.02em; }
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  column-gap: 22px;
+  column-gap: clamp(10px, 6vw, 22px);
   row-gap: 6px;
 }
 
@@ -250,13 +250,13 @@ html[lang="en"] .btn-random { letter-spacing: 0.02em; }
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
+  gap: clamp(4px, 2vw, 8px);
+  font-size: clamp(12px, 3.6vw, 15px);
   color: var(--muted);
 }
-.attempt-icons { display: inline-flex; gap: 4px; font-size: 18px; }
+.attempt-icons { display: inline-flex; gap: clamp(1px, 1vw, 4px); font-size: clamp(13px, 4vw, 18px); }
 .attempt-icons .used { filter: grayscale(1) brightness(0.55); opacity: 0.5; }
-.win-count { color: var(--gold); font-weight: 700; font-size: 17px; }
+.win-count { color: var(--gold); font-weight: 700; font-size: clamp(13px, 4vw, 17px); }
 
 /* Pulses 换一题 after a turn's guesses are used up. */
 .btn-random.nudge { animation: nudge 1.2s ease-in-out infinite; }
